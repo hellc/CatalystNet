@@ -22,7 +22,7 @@ open class Api {
         self.tasks.removeAll()
     }
 
-    public func load<T>(_ resource: Resource<T, CustomError>,
+    open func load<T>(_ resource: Resource<T, CustomError>,
                         _ client: RestClient,
                         multitasking: Bool = false,
                         completion: @escaping (Result<Any, CustomError>) -> Void) {

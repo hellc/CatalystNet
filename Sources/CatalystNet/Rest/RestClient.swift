@@ -40,7 +40,7 @@ open class RestClient {
     public var commonParams: JSON = [:]
 
     // swiftlint:disable function_body_length
-    public func load<A, CustomError>(
+    open func load<A, CustomError>(
         resource: Resource<A, CustomError>,
         completion: @escaping (Result<Any, CustomError>) -> Void,
         responseHeaders: @escaping ([AnyHashable: Any]) -> Void = { _ in }
