@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Api {
+open class Api {
     private(set) var tasks: [String: URLSessionDataTask] = [:]
 
     public static func resource(_ resource: String, with id: String) -> String {

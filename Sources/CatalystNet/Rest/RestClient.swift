@@ -30,7 +30,7 @@ public enum RestError<CustomError>: Error {
 }
 
 
-public class RestClient {
+open class RestClient {
     private(set) var baseUrl: String
     
     public init(baseUrl: String) {
