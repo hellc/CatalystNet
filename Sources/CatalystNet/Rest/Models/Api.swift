@@ -10,6 +10,8 @@ import Foundation
 open class Api {
     private(set) var tasks: [String: URLSessionDataTask] = [:]
 
+    public init() {}
+    
     public static func resource(_ resource: String, with id: String) -> String {
         return String.init(format: "%@/%@", resource, id)
     }
