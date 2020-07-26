@@ -6,6 +6,9 @@
 //
 
 import Foundation
+
+#if !(os(watchOS) || os(Linux))
+
 import SystemConfiguration
 
 class Reachability {
@@ -36,3 +39,4 @@ class Reachability {
         return isReachable && !needsConnection
     }
 }
+#endif

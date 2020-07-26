@@ -45,10 +45,12 @@ open class RestClient {
         completion: @escaping (Result<Any, CustomError>) -> Void,
         responseHeaders: @escaping ([AnyHashable: Any]) -> Void = { _ in }
     ) -> URLSessionDataTask? {
+        #if !os(watchOS)
         if !Reachability.isConnectedToNetwork() {
             completion(.failure(.noInternetConnection))
             return nil
         }
+        #endif
 
         var newResouce = resource
 

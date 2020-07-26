@@ -8,9 +8,9 @@
 import Foundation
 
 public struct CustomError: Error, Decodable {
-    var message: String
-    var userMessage: String
-    var code: String?
+    public var message: String
+    public var userMessage: String
+    public var code: String?
 }
 
 public enum Result<A, CustomError> {

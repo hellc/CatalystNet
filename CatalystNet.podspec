@@ -12,6 +12,7 @@ Pod::Spec.new do |s|
   s.requires_arc                = false
   s.ios.deployment_target       = '10.0'
   s.osx.deployment_target       = '10.15'
+  s.watchos.deployment_target   = '4.0'
 
   s.source                      = { :git => 'https://github.com/hellc/CatalystNet.git', :branch => 'master' }
   s.source_files                = 'Sources/**/*.swift'
