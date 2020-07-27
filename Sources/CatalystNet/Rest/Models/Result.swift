@@ -7,12 +7,6 @@
 
 import Foundation
 
-public struct CustomError: Error, Decodable {
-    public var message: String
-    public var userMessage: String
-    public var code: String?
-}
-
 public enum Result<A, CustomError> {
     case success(A)
     case failure(RestError<CustomError>)

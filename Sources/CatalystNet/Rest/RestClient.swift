@@ -20,16 +20,6 @@ public enum RequestMethod: String {
     case delete = "DELETE"
 }
 
-public enum RestError<CustomError>: Error {
-    case noInternetConnection
-    case custom(CustomError)
-    case unauthorized
-    case forbidden
-    case other
-    case unsupportedResource
-}
-
-
 open class RestClient {
     private(set) var baseUrl: String
     
@@ -43,6 +33,7 @@ open class RestClient {
     open func load<A, CustomError>(
         resource: Resource<A, CustomError>,
         completion: @escaping (Result<Any, CustomError>) -> Void,
+        debug: Bool = false,
         responseHeaders: @escaping ([AnyHashable: Any]) -> Void = { _ in }
     ) -> URLSessionDataTask? {
         #if !os(watchOS)
@@ -59,27 +50,34 @@ open class RestClient {
         let request = URLRequest(baseUrl: baseUrl, resource: newResouce)
 
         let task = URLSession.shared.dataTask(with: request) { data, response, _ in
+            
             // Parsing incoming data
             guard let response = response as? HTTPURLResponse else {
-                completion(.failure(.other))
+                completion(.failure(.other("HTTPURLResponse is missed")))
                 return
             }
             
-            responseHeaders(response.allHeaderFields)
-
+            let output = String(data: data ?? Data(), encoding: .utf8) ?? ""
+            let headers = response.allHeaderFields
+            
+            if debug {
+                print("📘 CatalystNet:", "\n📓 headers: \(headers)", "\n📗 output: \(output)")
+            }
+            
+            responseHeaders(headers)
+            
             if (200 ..< 300) ~= response.statusCode {
                 if let value = data.flatMap(resource.parse) {
-                    completion(Result(value: value, or: .other))
+                    completion(Result(value: value, or: .other(output)))
                 } else {
-                    let dataString = String(data: data ?? Data(), encoding: .utf8)
-                    completion(Result(value: dataString, or: .unsupportedResource))
+                    completion(Result(value: output, or: .unsupportedResource))
                 }
             } else if response.statusCode == 401 {
                 completion(.failure(.unauthorized))
             } else if response.statusCode == 403 {
                 completion(.failure(.forbidden))
             } else {
-                completion(.failure(data.flatMap(resource.parseError).map { .custom($0) } ?? .other))
+                completion(.failure(data.flatMap(resource.parseError).map { .custom($0) } ?? .other(output)))
             }
         }
 
