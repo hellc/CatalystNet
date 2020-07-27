@@ -7,13 +7,13 @@
 
 import Foundation
 
-public enum Result<A, CustomError> {
+public enum Result<A, E> {
     case success(A)
-    case failure(RestError<CustomError>)
+    case failure(RestError<E>)
 }
 
 extension Result {
-    public init(value: A?, or error: RestError<CustomError>) {
+    public init(value: A?, or error: RestError<E>) {
         guard let value = value else {
             self = .failure(error)
             return
@@ -27,7 +27,7 @@ extension Result {
         return value
     }
 
-    public var error: RestError<CustomError>? {
+    public var error: RestError<E>? {
         guard case let .failure(error) = self else { return nil }
         return error
     }

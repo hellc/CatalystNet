@@ -7,16 +7,9 @@
 
 import Foundation
 
-public struct CustomError: Error, Decodable {
-    public var message: String?
-    public var userMessage: String?
-    public var code: String?
-    public var status: String?
-}
-
-public enum RestError<CustomError>: Error {
+public enum RestError<E>: Error {
     case noInternetConnection
-    case custom(_ error: CustomError)
+    case custom(_ error: E?)
     case unauthorized
     case forbidden
     case other(_ message: String?)

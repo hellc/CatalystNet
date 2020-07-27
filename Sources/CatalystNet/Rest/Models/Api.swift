@@ -24,10 +24,10 @@ open class Api {
         self.tasks.removeAll()
     }
 
-    open func load<T>(_ resource: Resource<T, CustomError>,
+    open func load<T, E>(_ resource: Resource<T, E>,
                         _ client: RestClient,
                         multitasking: Bool = false,
-                        completion: @escaping (Result<Any, CustomError>) -> Void) {
+                        completion: @escaping (Result<Any, E>) -> Void) {
         DispatchQueue.main.async {
             let taskId = resource.path.absolutePath + resource.params.hash()
 

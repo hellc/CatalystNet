@@ -7,10 +7,10 @@
 
 import Foundation
 
-public struct Resource<A, CustomError> {
+public struct Resource<A, E> {
     let path: Path
     let parse: (Data) -> A?
-    let parseError: (Data) -> CustomError?
+    let parseError: (Data) -> E?
     
     public var method: RequestMethod
     public var headers: HTTPHeaders
@@ -21,7 +21,7 @@ public struct Resource<A, CustomError> {
          params: JSON = [:],
          headers: HTTPHeaders = [:],
          parse: @escaping (Data) -> A?,
-         parseError: @escaping (Data) -> CustomError?) {
+         parseError: @escaping (Data) -> E?) {
         self.path = Path(path)
         self.method = method
         self.params = params
@@ -31,7 +31,7 @@ public struct Resource<A, CustomError> {
     }
 }
 
-extension Resource where A: Decodable, CustomError: Decodable {
+extension Resource where A: Decodable, E: Decodable {
     public init(jsonDecoder: JSONDecoder = JSONDecoder(),
          path: String,
          method: RequestMethod = .get,
@@ -45,7 +45,7 @@ extension Resource where A: Decodable, CustomError: Decodable {
             try? jsonDecoder.decode(A.self, from: $0)
         }
         self.parseError = {
-            try? jsonDecoder.decode(CustomError.self, from: $0)
+            try? jsonDecoder.decode(E.self, from: $0)
         }
     }
 }

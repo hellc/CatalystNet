@@ -30,9 +30,9 @@ open class RestClient {
     public var commonParams: JSON = [:]
 
     // swiftlint:disable function_body_length
-    open func load<A, CustomError>(
-        resource: Resource<A, CustomError>,
-        completion: @escaping (Result<Any, CustomError>) -> Void,
+    open func load<A, E>(
+        resource: Resource<A, E>,
+        completion: @escaping (Result<Any, E>) -> Void,
         debug: Bool = false,
         responseHeaders: @escaping ([AnyHashable: Any]) -> Void = { _ in }
     ) -> URLSessionDataTask? {
@@ -76,8 +76,10 @@ open class RestClient {
                 completion(.failure(.unauthorized))
             } else if response.statusCode == 403 {
                 completion(.failure(.forbidden))
+            } else if let error = data.flatMap(resource.parseError) {
+                completion(.failure(.custom(error)))
             } else {
-                completion(.failure(data.flatMap(resource.parseError).map { .custom($0) } ?? .other(output)))
+                completion(.failure(.other(output)))
             }
         }
 
