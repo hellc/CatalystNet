@@ -15,16 +15,19 @@ public struct Resource<A, E> {
     public var method: RequestMethod
     public var headers: HTTPHeaders
     public var params: JSON
+    public var queryParams: JSON
 
     public init(path: String,
          method: RequestMethod = .get,
          params: JSON = [:],
+         queryParams: JSON = [:],
          headers: HTTPHeaders = [:],
          parse: @escaping (Data) -> A?,
          parseError: @escaping (Data) -> E?) {
         self.path = Path(path)
         self.method = method
         self.params = params
+        self.queryParams = queryParams
         self.headers = headers
         self.parse = parse
         self.parseError = parseError
@@ -36,10 +39,12 @@ extension Resource where A: Decodable, E: Decodable {
          path: String,
          method: RequestMethod = .get,
          params: JSON = [:],
+         queryParams: JSON = [:],
          headers: HTTPHeaders = [:]) {
         self.path = Path(path)
         self.method = method
         self.params = params
+        self.queryParams = queryParams
         self.headers = headers
         self.parse = {
             try? jsonDecoder.decode(A.self, from: $0)
