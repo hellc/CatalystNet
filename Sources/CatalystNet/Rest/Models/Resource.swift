@@ -7,6 +7,11 @@
 
 import Foundation
 
+public enum BodyFormat {
+    case json
+    case multipartFormData
+}
+
 public struct Resource<A, E> {
     let path: Path
     let parse: (Data) -> A?
@@ -16,12 +21,14 @@ public struct Resource<A, E> {
     public var headers: HTTPHeaders
     public var params: JSON
     public var queryParams: JSON
+    public var bodyFormat: BodyFormat
 
     public init(path: String,
          method: RequestMethod = .get,
          params: JSON = [:],
          queryParams: JSON = [:],
          headers: HTTPHeaders = [:],
+         bodyFormat: BodyFormat = .json,
          parse: @escaping (Data) -> A?,
          parseError: @escaping (Data) -> E?) {
         self.path = Path(path)
@@ -29,6 +36,7 @@ public struct Resource<A, E> {
         self.params = params
         self.queryParams = queryParams
         self.headers = headers
+        self.bodyFormat = bodyFormat
         self.parse = parse
         self.parseError = parseError
     }
@@ -40,12 +48,14 @@ extension Resource where A: Decodable, E: Decodable {
          method: RequestMethod = .get,
          params: JSON = [:],
          queryParams: JSON = [:],
-         headers: HTTPHeaders = [:]) {
+         headers: HTTPHeaders = [:],
+         bodyFormat: BodyFormat = .json) {
         self.path = Path(path)
         self.method = method
         self.params = params
         self.queryParams = queryParams
         self.headers = headers
+        self.bodyFormat = bodyFormat
         self.parse = {
             try? jsonDecoder.decode(A.self, from: $0)
         }
