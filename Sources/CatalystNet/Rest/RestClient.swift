@@ -33,8 +33,8 @@ open class RestClient {
     open func load<A, E>(
         resource: Resource<A, E>,
         completion: @escaping (Result<Any, E>) -> Void,
-        debug: Bool = false,
-        responseHeaders: @escaping ([AnyHashable: Any]) -> Void = { _ in }
+        logging: Bool = false,
+        logsHandler: @escaping (_ input: RequestLog, _ output: ResponseLog?) -> Void = { _, _ in }
     ) -> URLSessionDataTask? {
         #if !os(watchOS)
         if !Reachability.isConnectedToNetwork() {
@@ -50,31 +50,44 @@ open class RestClient {
         let request = URLRequest(baseUrl: baseUrl, resource: newResouce)
 
         let task = URLSession.shared.dataTask(with: request) { data, response, _ in
-            
             // Parsing incoming data
             guard let response = response as? HTTPURLResponse else {
                 completion(.failure(.other("HTTPURLResponse is missed")))
                 return
             }
             
+            let statusCode = response.statusCode
             let output = String(data: data ?? Data(), encoding: .utf8) ?? ""
-            let headers = response.allHeaderFields
             
-            if debug {
-                print("📘 CatalystNet:", "\n📓 headers: \(headers)", "\n📗 output: \(output)")
+            if logging {
+                DispatchQueue.global().async {
+                    let requestLog = RequestLog(
+                        httpMethod: request.httpMethod,
+                        headers: request.allHTTPHeaderFields,
+                        body: String(data: request.httpBody ?? Data(), encoding: .utf8),
+                        path: resource.path.absolutePath,
+                        host: self.baseUrl,
+                        url: request.url?.absoluteString
+                    )
+                    
+                    let headers = response.allHeaderFields
+                    let responseLog = ResponseLog(headers: headers, body: output, code: statusCode)
+                    
+                    DispatchQueue.main.async {
+                        logsHandler(requestLog, responseLog)
+                    }
+                }
             }
             
-            responseHeaders(headers)
-            
-            if (200 ..< 300) ~= response.statusCode {
+            if (200 ..< 300) ~= statusCode {
                 if let value = data.flatMap(resource.parse) {
                     completion(Result(value: value, or: .other(output)))
                 } else {
                     completion(Result(value: output, or: .unsupportedResource))
                 }
-            } else if response.statusCode == 401 {
+            } else if statusCode == 401 {
                 completion(.failure(.unauthorized))
-            } else if response.statusCode == 403 {
+            } else if statusCode == 403 {
                 completion(.failure(.forbidden))
             } else if let error = data.flatMap(resource.parseError) {
                 completion(.failure(.custom(error)))

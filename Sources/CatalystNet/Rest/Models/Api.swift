@@ -23,10 +23,25 @@ open class Api {
 
         self.tasks.removeAll()
     }
+    
+    open func load<T, E>(_ resource: Resource<T, E>,
+                        _ client: RestClient,
+                        multitasking: Bool = false,
+                        completion: @escaping (Result<Any, E>) -> Void) {
+        self.load(
+            resource,
+            client,
+            multitasking: multitasking,
+            logging: true,
+            logsHandler: { _, _ in }, completion: completion
+        )
+    }
 
     open func load<T, E>(_ resource: Resource<T, E>,
                         _ client: RestClient,
                         multitasking: Bool = false,
+                        logging: Bool = false,
+                        logsHandler: @escaping (_ input: RequestLog, _ output: ResponseLog?) -> Void = { _, _ in },
                         completion: @escaping (Result<Any, E>) -> Void) {
         DispatchQueue.main.async {
             let taskId = resource.path.absolutePath + resource.params.hash()
@@ -35,15 +50,12 @@ open class Api {
                 task.cancel()
                 self.tasks.removeValue(forKey: taskId)
             }
-
-            let task = client.load(
-                resource: resource,
-                completion: { response in
-                    DispatchQueue.main.async {
-                        completion(response.self)
-                    }
+            
+            let task = client.load(resource: resource, completion: { response in
+                DispatchQueue.main.async {
+                    completion(response.self)
                 }
-            )
+            }, logging: logging, logsHandler: logsHandler)
 
             if !multitasking, let task = task {
                 self.tasks.updateValue(task, forKey: taskId)
