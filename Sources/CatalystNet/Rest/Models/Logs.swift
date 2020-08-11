@@ -8,6 +8,7 @@
 import Foundation
 
 public struct RequestLog {
+    let timestamp: Date
     let httpMethod: String?
     let headers: [AnyHashable: Any]?
     let body: String?
@@ -17,6 +18,8 @@ public struct RequestLog {
 }
 
 public struct ResponseLog {
+    let timestamp: Date
+    let responseTime: TimeInterval?
     let headers: [AnyHashable: Any]?
     let body: String?
     let code: Int?

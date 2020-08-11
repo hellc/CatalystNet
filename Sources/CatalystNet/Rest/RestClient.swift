@@ -49,6 +49,21 @@ open class RestClient {
 
         let request = URLRequest(baseUrl: baseUrl, resource: newResouce)
 
+        var requestLog: RequestLog!
+        
+        if logging {
+            requestLog = RequestLog(
+                timestamp: Date(),
+                httpMethod: request.httpMethod,
+                headers: request.allHTTPHeaderFields,
+                body: String(data: request.httpBody ?? Data(), encoding: .utf8),
+                path: resource.path.absolutePath,
+                host: self.baseUrl,
+                url: request.url?.absoluteString
+            )
+        }
+
+        
         let task = URLSession.shared.dataTask(with: request) { data, response, _ in
             // Parsing incoming data
             guard let response = response as? HTTPURLResponse else {
@@ -61,17 +76,15 @@ open class RestClient {
             
             if logging {
                 DispatchQueue.global().async {
-                    let requestLog = RequestLog(
-                        httpMethod: request.httpMethod,
-                        headers: request.allHTTPHeaderFields,
-                        body: String(data: request.httpBody ?? Data(), encoding: .utf8),
-                        path: resource.path.absolutePath,
-                        host: self.baseUrl,
-                        url: request.url?.absoluteString
-                    )
-                    
                     let headers = response.allHeaderFields
-                    let responseLog = ResponseLog(headers: headers, body: output, code: statusCode)
+                    let timestamp = Date()
+                    let responseLog = ResponseLog(
+                        timestamp: timestamp,
+                        responseTime: timestamp.timeIntervalSince(requestLog.timestamp),
+                        headers: headers,
+                        body: output,
+                        code: statusCode
+                    )
                     
                     DispatchQueue.main.async {
                         logsHandler(requestLog, responseLog)
