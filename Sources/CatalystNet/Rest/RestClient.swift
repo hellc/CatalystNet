@@ -49,18 +49,20 @@ open class RestClient {
 
         let request = URLRequest(baseUrl: baseUrl, resource: newResouce)
 
-        var requestLog: RequestLog!
+        var requestLog: RequestLog?
         
         if logging {
-            requestLog = RequestLog(
-                timestamp: Date(),
-                httpMethod: request.httpMethod,
-                headers: request.allHTTPHeaderFields,
-                body: String(data: request.httpBody ?? Data(), encoding: .utf8),
-                path: resource.path.absolutePath,
-                host: self.baseUrl,
-                url: request.url?.absoluteString
-            )
+            DispatchQueue.global(qos: .background).async {
+                requestLog = RequestLog(
+                    timestamp: Date(),
+                    httpMethod: request.httpMethod,
+                    headers: request.allHTTPHeaderFields,
+                    body: String(data: request.httpBody ?? Data(), encoding: .utf8),
+                    path: resource.path.absolutePath,
+                    host: self.baseUrl,
+                    url: request.url?.absoluteString
+                )
+            }
         }
 
         
@@ -74,8 +76,8 @@ open class RestClient {
             let statusCode = response.statusCode
             let output = String(data: data ?? Data(), encoding: .utf8) ?? ""
             
-            if logging {
-                DispatchQueue.global().async {
+            if logging, let requestLog = requestLog  {
+                DispatchQueue.global(qos: .background).async {
                     let headers = response.allHeaderFields
                     let timestamp = Date()
                     let responseLog = ResponseLog(
