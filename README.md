@@ -48,7 +48,7 @@ struct Post: Decodable {
 }
 ```
 
-#### Define a Custom Api class:
+#### Define Api class base:
 
 ```swift
 class TestApi: Api {
@@ -67,7 +67,13 @@ class TestApi: Api {
                     completion: @escaping (Result<Any, E>) -> Void) {
         super.load(resource, self.client, multitasking: multitasking, completion: completion)
     }
-    
+}
+```
+
+#### Define Api class methods:
+
+```swift
+extension TestApi {
     func post(with id: String, completion: @escaping (Post?, RestError<String>?) -> Void) {
         var resource = Resource<Post, String>(path: Api.resource(Endpoints.posts, with: id))
         
@@ -87,15 +93,12 @@ class TestApi: Api {
 #### Try it:
 
 ```swift
-private let testApi = TestApi(baseUrl: "https://jsonplaceholder.typicode.com")
+let testApi = TestApi(baseUrl: "https://jsonplaceholder.typicode.com")
+let id = "42"
 
-func testExample() {
-    let id = "42"
-    self.testApi.post(with: id) { (post, error) in
-        if let post = post, error == nil {
-            print(post)
-        }
-        expectation.fulfill()
+self.testApi.post(with: id) { (post, error) in
+    if let post = post, error == nil {
+        print(post)
     }
 }
 ```
