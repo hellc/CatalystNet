@@ -37,14 +37,6 @@ If you prefer not to use any of the aforementioned dependency managers, you can 
 import CatalystNet
 ```
 
-#### Define a Custom Rest Api Client:
-
-```swift
-class TestApiClient: RestClient {
-    static let shared = RestClient(baseUrl: "https://jsonplaceholder.typicode.com")
-}
-```
-
 #### Define a requested resource:
 
 ```swift
@@ -60,17 +52,24 @@ struct Post: Decodable {
 
 ```swift
 class TestApi: Api {
-    static let shared = TestApi()
+    private let client: RestClient!
     
-    override func load<T>(_ resource: Resource<T, CustomError>,
-                          _ client: RestClient = TestApiClient.shared,
-                          multitasking: Bool = false,
-                          completion: @escaping (Result<Any, CustomError>) -> Void) {
-        super.load(resource, client, multitasking: multitasking, completion: completion)
+    private struct Endpoints {
+        static let posts = "/posts"
     }
     
-    func post(with id: String, completion: @escaping (Post?, RestError<CustomError>?) -> Void) {
-        var resource = Resource<Post, CustomError>(path: Api.resource(TestApi.posts, with: id))
+    init(baseUrl: String) {
+        self.client = RestClient(baseUrl: baseUrl)
+    }
+    
+    func load<T, E>(_ resource: Resource<T, E>,
+                    multitasking: Bool = false,
+                    completion: @escaping (Result<Any, E>) -> Void) {
+        super.load(resource, self.client, multitasking: multitasking, completion: completion)
+    }
+    
+    func post(with id: String, completion: @escaping (Post?, RestError<String>?) -> Void) {
+        var resource = Resource<Post, String>(path: Api.resource(Endpoints.posts, with: id))
         
         resource.method = .get
         
@@ -85,23 +84,18 @@ class TestApi: Api {
 }
 ```
 
-#### Define a Custom Api Endpoints as an extension of the Custom Api class:
-
-```swift
-extension TestApi {
-    static let posts = "/posts"
-}
-```
-
 #### Try it:
 
 ```swift
+private let testApi = TestApi(baseUrl: "https://jsonplaceholder.typicode.com")
+
 func testExample() {
     let id = "42"
-    TestApi.shared.post(with: id) { (post, error) in
+    self.testApi.post(with: id) { (post, error) in
         if let post = post, error == nil {
             print(post)
         }
+        expectation.fulfill()
     }
 }
 ```

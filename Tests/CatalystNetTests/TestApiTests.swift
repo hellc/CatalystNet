@@ -9,11 +9,13 @@ import XCTest
 @testable import CatalystNet
 
 final class TestApiTests: XCTestCase {
+    private let testApi = TestApi(baseUrl: "https://jsonplaceholder.typicode.com")
+    
     func testExample() {
         let expectation = self.expectation(description: "Post")
         
         let id = "42"
-        TestApi.shared.post(with: id) { (post, error) in
+        self.testApi.post(with: id) { (post, error) in
             if let post = post, error == nil {
                 print(post)
             }
