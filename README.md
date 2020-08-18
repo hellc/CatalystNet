@@ -62,10 +62,6 @@ struct Post: Decodable {
 class TestApi: Api {
     private let client: RestClient!
     
-    private struct Endpoints {
-        static let posts = "/posts"
-    }
-    
     init(baseUrl: String) {
         self.client = RestClient(baseUrl: baseUrl)
     }
@@ -82,6 +78,10 @@ class TestApi: Api {
 
 ```swift
 extension TestApi {
+    private struct Endpoints {
+        static let posts = "/posts"
+    }
+    
     func post(with id: String, completion: @escaping (Post?, RestError<String>?) -> Void) {
         var resource = Resource<Post, String>(path: Api.resource(Endpoints.posts, with: id))
         
