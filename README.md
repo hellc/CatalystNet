@@ -1,6 +1,14 @@
 # CatalystNet
 Universal AppleOS Apps Networking kit
 
+![badge](https://action-badges.now.sh/hellc/CatalystNet)
+[![CocoaPods Compatible](https://img.shields.io/cocoapods/v/CatalystNet.svg)](https://img.shields.io/cocoapods/v/CatalystNet.svg)
+![iOS](https://img.shields.io/badge/Swift-5.0-orange)
+![iOS](https://img.shields.io/badge/iOS-11.0-green)
+![macOS](https://img.shields.io/badge/macOS-10.15-green)
+![macOS](https://img.shields.io/badge/watchOS-4.0-green)
+![MIT](https://cocoapod-badges.herokuapp.com/l/NSStringMask/badge.png)
+
 ## Installation:
 
 ### CocoaPods
