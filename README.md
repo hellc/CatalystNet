@@ -16,7 +16,7 @@ Universal AppleOS Apps Networking kit
 [CocoaPods](https://cocoapods.org) is a dependency manager for Cocoa projects. For usage and installation instructions, visit their website. To integrate CatalystNet into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
 ```ruby
-pod 'CatalystNet'
+pod 'CatalystNet', '~> 1.0.1'
 ```
 
 ### Swift Package Manager
@@ -27,7 +27,7 @@ Once you have your Swift package set up, adding CatalystNet as a dependency is a
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/hellc/CatalystNet.git")
+    .package(url: "https://github.com/hellc/CatalystNet.git", .upToNextMajor(from: "1.0.1"))
 ]
 ```
 
