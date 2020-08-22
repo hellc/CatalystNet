@@ -9,14 +9,14 @@ import Foundation
 @testable import CatalystNet
 
 class TestApi: Api {
-    private let client: RestClient!
+    private let client: HttpClient!
     
     private struct Endpoints {
         static let posts = "/posts"
     }
     
     init(baseUrl: String) {
-        self.client = RestClient(baseUrl: baseUrl)
+        self.client = HttpClient(baseUrl: baseUrl)
     }
     
     func load<T, E>(_ resource: Resource<T, E>,
@@ -25,7 +25,7 @@ class TestApi: Api {
         super.load(resource, self.client, multitasking: multitasking, completion: completion)
     }
     
-    func post(with id: String, completion: @escaping (Post?, RestError<String>?) -> Void) {
+    func post(with id: String, completion: @escaping (Post?, HttpError<String>?) -> Void) {
         var resource = Resource<Post, String>(path: Api.resource(Endpoints.posts, with: id))
         
         resource.method = .get

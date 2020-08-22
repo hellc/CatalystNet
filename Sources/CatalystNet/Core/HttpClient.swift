@@ -1,5 +1,5 @@
 //
-//  WebClient.swift
+//  HttpClient.swift
 //
 //  Created by Ivan Manov on 01.07.2020.
 //  Copyright © 2020 @hellc. All rights reserved.
@@ -20,7 +20,7 @@ public enum RequestMethod: String {
     case delete = "DELETE"
 }
 
-open class RestClient {
+open class HttpClient {
     private(set) var baseUrl: String
     
     public init(baseUrl: String) {

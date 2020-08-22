@@ -25,7 +25,7 @@ open class Api {
     }
     
     open func load<T, E>(_ resource: Resource<T, E>,
-                        _ client: RestClient,
+                        _ client: HttpClient,
                         multitasking: Bool = false,
                         completion: @escaping (Result<Any, E>) -> Void) {
         self.load(
@@ -38,7 +38,7 @@ open class Api {
     }
 
     open func load<T, E>(_ resource: Resource<T, E>,
-                        _ client: RestClient,
+                        _ client: HttpClient,
                         multitasking: Bool = false,
                         logging: Bool = false,
                         logsHandler: @escaping (_ input: RequestLog, _ output: ResponseLog?) -> Void = { _, _ in },

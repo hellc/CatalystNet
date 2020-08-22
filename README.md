@@ -37,7 +37,7 @@ If you prefer not to use any of the aforementioned dependency managers, you can 
 
 ## Usage:
 
-### Rest client:
+### Http client:
 
 #### Import package
 
@@ -60,10 +60,10 @@ struct Post: Decodable {
 
 ```swift
 class TestApi: Api {
-    private let client: RestClient!
+    private let client: HttpClient!
     
     init(baseUrl: String) {
-        self.client = RestClient(baseUrl: baseUrl)
+        self.client = HttpClient(baseUrl: baseUrl)
     }
     
     func load<T, E>(_ resource: Resource<T, E>,
@@ -82,7 +82,7 @@ extension TestApi {
         static let posts = "/posts"
     }
     
-    func post(with id: String, completion: @escaping (Post?, RestError<String>?) -> Void) {
+    func post(with id: String, completion: @escaping (Post?, HttpError<String>?) -> Void) {
         var resource = Resource<Post, String>(path: Api.resource(Endpoints.posts, with: id))
         
         resource.method = .get
