@@ -23,7 +23,7 @@ extension URLRequest {
         case .post, .put, .patch:
             switch resource.bodyFormat {
             case .multipartFormData:
-                try? self.setMultipartFormData(resource.params, encoding: .utf8)
+                try? self.setMultipartFormData(parameters: resource.params, files: resource.files)
             default: // JSON
                 httpBody = try! JSONSerialization.data(withJSONObject: resource.params, options: [])
             }

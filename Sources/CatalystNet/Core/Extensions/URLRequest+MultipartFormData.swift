@@ -4,71 +4,71 @@
 //  Created by Ivan Manov on 04.08.2020.
 //  Copyright © 2020 @hellc. All rights reserved.
 //
-//  Public domain - https://gist.github.com/nolanw/dff7cc5d5570b030d6ba385698348b7c
 
 import Foundation
 
 extension URLRequest {
-    /**
-     Configures the URL request for `multipart/form-data`. The request's `httpBody` is set, and a value is set for the HTTP header field `Content-Type`.
-     
-     - Parameter parameters: The form data to set.
-     - Parameter encoding: The encoding to use for the keys and values.
-     
-     - Throws: `MultipartFormDataEncodingError` if any keys or values in `parameters` are not entirely in `encoding`.
-     
-     - Note: The default `httpMethod` is `GET`, and `GET` requests do not typically have a response body. Remember to set the `httpMethod` to e.g. `POST` before sending the request.
-     - Seealso: https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart-form-data
-     */
-    public mutating func setMultipartFormData(_ parameters: [String: Any], encoding: String.Encoding) throws {
-        let makeRandom = { UInt32.random(in: (.min)...(.max)) }
-        let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
+    
+    public mutating func setMultipartFormData(parameters: [String: Any] = [:], files: [CatalystFile] = []) throws {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        self.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        httpBody = {
+            let body = NSMutableData()
 
-        let contentType: String = try {
-            guard let charset = CFStringConvertEncodingToIANACharSetName(CFStringConvertNSStringEncodingToEncoding(encoding.rawValue)) else {
-                throw MultipartFormDataEncodingError.characterSetName
+            for (key, value) in parameters {
+                body.appendString(convertFormField(named: key, value: value, using: boundary))
             }
-            return "multipart/form-data; charset=\(charset); boundary=\(boundary)"
-        }()
-        addValue(contentType, forHTTPHeaderField: "Content-Type")
-
-        httpBody = try {
-            var body = Data()
-
-            for (rawName, rawValue) in parameters {
-                if !body.isEmpty {
-                    body.append("\r\n".data(using: .utf8)!)
-                }
-                
-                let rawValue = "\(rawValue)"
-
-                body.append("--\(boundary)\r\n".data(using: .utf8)!)
-
-                guard
-                    rawName.canBeConverted(to: encoding),
-                    let disposition = "Content-Disposition: form-data; name=\"\(rawName)\"\r\n".data(using: encoding) else {
-                    throw MultipartFormDataEncodingError.name(rawName)
-                }
-                body.append(disposition)
-
-                body.append("\r\n".data(using: .utf8)!)
-
-                guard let value = rawValue.data(using: encoding) else {
-                    throw MultipartFormDataEncodingError.value(rawValue, name: rawName)
-                }
-
-                body.append(value)
+            
+            for file in files {
+                body.append(self.convertFileData(fieldName: file.fieldName,
+                                                 fileName: file.fileName,
+                                                 mimeType: file.mimeType,
+                                                 fileData: file.data,
+                                                 using: boundary))
             }
+            
+            body.appendString("--\(boundary)--")
 
-            body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-
-            return body
+            return body as Data
         }()
     }
+    
+    private func convertFormField(named name: String,
+                                  value: Any,
+                                  using boundary: String) -> String {
+        var fieldString = "--\(boundary)\r\n"
+        fieldString += "Content-Disposition: form-data; name=\"\(name)\"\r\n"
+        fieldString += "\r\n"
+        fieldString += "\(value)\r\n"
+
+        return fieldString
+    }
+
+    private func convertFileData(fieldName: String,
+                                 fileName: String,
+                                 mimeType: String,
+                                 fileData: Data,
+                                 using  boundary: String) -> Data {
+        let data = NSMutableData()
+
+        data.appendString("--\(boundary)\r\n")
+        data.appendString("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(fileName)\"\r\n")
+        data.appendString("Content-Type: \(mimeType)\r\n\r\n")
+        data.append(fileData)
+        data.appendString("\r\n")
+
+        return data as Data
+    }
+    
 }
 
-public enum MultipartFormDataEncodingError: Error {
-    case characterSetName
-    case name(String)
-    case value(String, name: String)
+public extension NSMutableData {
+
+    func appendString(_ string: String) {
+        if let data = string.data(using: .utf8) {
+          self.append(data)
+        }
+    }
+
 }

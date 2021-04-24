@@ -12,6 +12,13 @@ public enum BodyFormat {
     case multipartFormData
 }
 
+public struct CatalystFile {
+    let data: Data
+    let fileName: String
+    let mimeType: String
+    let fieldName: String = "files"
+}
+
 public struct Resource<A, E> {
     let path: Path
     let parse: (Data) -> A?
@@ -22,6 +29,7 @@ public struct Resource<A, E> {
     public var params: JSON
     public var queryParams: JSON
     public var bodyFormat: BodyFormat
+    public var files: [CatalystFile]
 
     public init(path: String,
          method: RequestMethod = .get,
@@ -29,6 +37,7 @@ public struct Resource<A, E> {
          queryParams: JSON = [:],
          headers: HTTPHeaders = [:],
          bodyFormat: BodyFormat = .json,
+         files: [CatalystFile] = [],
          parse: @escaping (Data) -> A?,
          parseError: @escaping (Data) -> E?) {
         self.path = Path(path)
@@ -37,6 +46,8 @@ public struct Resource<A, E> {
         self.queryParams = queryParams
         self.headers = headers
         self.bodyFormat = bodyFormat
+        self.files = files
+        
         self.parse = parse
         self.parseError = parseError
     }
@@ -49,13 +60,16 @@ extension Resource where A: Decodable, E: Decodable {
          params: JSON = [:],
          queryParams: JSON = [:],
          headers: HTTPHeaders = [:],
-         bodyFormat: BodyFormat = .json) {
+         bodyFormat: BodyFormat = .json,
+         files: [CatalystFile] = []) {
         self.path = Path(path)
         self.method = method
         self.params = params
         self.queryParams = queryParams
         self.headers = headers
         self.bodyFormat = bodyFormat
+        self.files = files
+        
         self.parse = {
             try? jsonDecoder.decode(A.self, from: $0)
         }
