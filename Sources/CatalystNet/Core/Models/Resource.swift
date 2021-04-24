@@ -13,10 +13,10 @@ public enum BodyFormat {
 }
 
 public struct CatalystFile {
-    let data: Data
-    let fileName: String
-    let mimeType: String
-    let fieldName: String = "files"
+    public var data: Data
+    public var fileName: String
+    public var mimeType: String
+    public var fieldName: String = "files"
 }
 
 public struct Resource<A, E> {
