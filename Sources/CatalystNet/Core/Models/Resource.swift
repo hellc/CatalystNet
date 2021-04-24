@@ -16,7 +16,17 @@ public struct CatalystFile {
     public var data: Data
     public var fileName: String
     public var mimeType: String
-    public var fieldName: String = "files"
+    public var fieldName: String
+    
+    public init(data: Data,
+                fileName: String,
+                mimeType: String,
+                fieldName: String = "files") {
+        self.data = data
+        self.fileName = fileName
+        self.mimeType = mimeType
+        self.fieldName = fieldName
+    }
 }
 
 public struct Resource<A, E> {
