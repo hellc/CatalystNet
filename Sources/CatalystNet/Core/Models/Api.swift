@@ -8,7 +8,7 @@
 import Foundation
 
 open class Api {
-    private(set) var tasks: [String: URLSessionDataTask] = [:]
+    private(set) var tasks: [String: URLSessionTask] = [:]
 
     public init() {}
     

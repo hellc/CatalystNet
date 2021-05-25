@@ -35,7 +35,7 @@ open class HttpClient {
         completion: @escaping (Result<Any, E>) -> Void,
         logging: Bool = false,
         logsHandler: @escaping (_ input: RequestLog, _ output: ResponseLog?) -> Void = { _, _ in }
-    ) -> URLSessionDataTask? {
+    ) -> URLSessionTask? {
         #if !os(watchOS)
         if !Reachability.isConnectedToNetwork() {
             completion(.failure(.noInternetConnection))
@@ -47,7 +47,7 @@ open class HttpClient {
 
         newResouce.params += self.commonParams
 
-        let request = URLRequest(baseUrl: baseUrl, resource: newResouce)
+        var request = URLRequest(baseUrl: baseUrl, resource: newResouce)
 
         var requestLog: RequestLog?
         
@@ -64,7 +64,39 @@ open class HttpClient {
                 )
             }
         }
-
+        
+        request.timeoutInterval = 15.0
+        
+        if resource.download {
+            let task = URLSession.shared.downloadTask(with: request) { localURL, response, error in
+                guard let response = response as? HTTPURLResponse else {
+                    completion(.failure(.other("HTTPURLResponse is missed")))
+                    return
+                }
+                
+                let statusCode = response.statusCode
+                
+                if (200 ..< 300) ~= statusCode {
+                    if let localURL = localURL {
+                        completion(
+                            Result(value: localURL, or: .other("No file"))
+                        )
+                    } else {
+                        completion(Result(value: nil, or: .unsupportedResource))
+                    }
+                } else if statusCode == 401 {
+                    completion(.failure(.unauthorized))
+                } else if statusCode == 403 {
+                    completion(.failure(.forbidden))
+                } else {
+                    completion(.failure(.other("Unknown")))
+                }
+            }
+            
+            task.resume()
+            
+            return task
+        }
         
         let task = URLSession.shared.dataTask(with: request) { data, response, _ in
             // Parsing incoming data
