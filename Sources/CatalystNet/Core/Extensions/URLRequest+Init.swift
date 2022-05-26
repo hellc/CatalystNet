@@ -13,10 +13,10 @@ extension URLRequest {
         
         self.init(url: url)
         
-        httpMethod = resource.method.rawValue
+        self.httpMethod = resource.method.rawValue
         
         resource.headers.forEach {
-            setValue($0.value, forHTTPHeaderField: $0.key)
+            self.setValue($0.value, forHTTPHeaderField: $0.key)
         }
         
         switch resource.method {
@@ -24,8 +24,9 @@ extension URLRequest {
             switch resource.bodyFormat {
             case .multipartFormData:
                 try? self.setMultipartFormData(parameters: resource.params, files: resource.files)
-            default: // JSON
-                httpBody = try! JSONSerialization.data(withJSONObject: resource.params, options: [])
+            case .json:
+                self.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                self.httpBody = try? JSONSerialization.data(withJSONObject: resource.params, options: [])
             }
             
         default:
