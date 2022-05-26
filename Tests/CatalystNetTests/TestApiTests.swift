@@ -64,6 +64,18 @@ final class TestApiTests: XCTestCase {
         
         waitForExpectations(timeout: 2, handler: nil)
     }
+    
+    @available(iOS 15.0, *)
+    @available(macOS 10.15.0, *)
+    @available(macOS 12.0, *)
+    func testAsync() async {
+        let id = "42"
+        let (post, error) = await self.testApi.post(with: id)
+        
+        XCTAssertNil(error)
+        XCTAssertNotNil(post)
+        XCTAssertEqual(post?.id, 42)
+    }
 
     static var allTests = [
         ("testPostExample", testPostExample),

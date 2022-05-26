@@ -42,16 +42,18 @@ public struct Resource<A, E> {
     public var files: [CatalystFile]
     public var download: Bool
 
-    public init(path: String,
-         method: RequestMethod = .get,
-         params: JSON = [:],
-         queryParams: JSON = [:],
-         headers: HTTPHeaders = [:],
-         bodyFormat: BodyFormat = .json,
-         files: [CatalystFile] = [],
-         download: Bool = false,
-         parse: @escaping (Data) -> A?,
-         parseError: @escaping (Data) -> E?) {
+    public init(
+        path: String,
+        method: RequestMethod = .get,
+        params: JSON = [:],
+        queryParams: JSON = [:],
+        headers: HTTPHeaders = [:],
+        bodyFormat: BodyFormat = .json,
+        files: [CatalystFile] = [],
+        download: Bool = false,
+        parse: @escaping (Data) -> A?,
+        parseError: @escaping (Data) -> E?
+    ) {
         self.path = Path(path)
         self.method = method
         self.params = params
@@ -67,15 +69,17 @@ public struct Resource<A, E> {
 }
 
 extension Resource where A: Decodable, E: Decodable {
-    public init(jsonDecoder: JSONDecoder = JSONDecoder(),
-         path: String,
-         method: RequestMethod = .get,
-         params: JSON = [:],
-         queryParams: JSON = [:],
-         headers: HTTPHeaders = [:],
-         bodyFormat: BodyFormat = .json,
-         files: [CatalystFile] = [],
-         download: Bool = false) {
+    public init(
+        jsonDecoder: JSONDecoder = JSONDecoder(),
+        path: String,
+        method: RequestMethod = .get,
+        params: JSON = [:],
+        queryParams: JSON = [:],
+        headers: HTTPHeaders = [:],
+        bodyFormat: BodyFormat = .json,
+        files: [CatalystFile] = [],
+        download: Bool = false
+    ) {
         self.path = Path(path)
         self.method = method
         self.params = params

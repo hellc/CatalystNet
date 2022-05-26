@@ -8,6 +8,7 @@
 import Foundation
 
 extension URLRequest {
+    
     public init<A, E>(baseUrl: String, resource: Resource<A, E>) {
         let url = URL(baseUrl: baseUrl, resource: resource)
         
@@ -33,4 +34,5 @@ extension URLRequest {
             break
         }
     }
+    
 }
