@@ -9,9 +9,9 @@ import Foundation
 @testable import CatalystNet
 
 class TestApi: Api {
-    private let client: HttpClient!
+    let client: HttpClient!
     
-    private struct Endpoints {
+    struct Endpoints {
         static let posts = "/posts"
         
         static func photos(albumId: Int) -> String {
@@ -33,13 +33,6 @@ class TestApi: Api {
         super.load(resource, self.client, multitasking: multitasking, completion: completion)
     }
     
-    @available(iOS 15.0, *)
-    @available(macOS 10.15.0, *)
-    @available(macOS 12.0, *)
-    func load<T, E>(_ resource: Resource<T, E>) async -> Result<Any, E> {
-        return await super.load(resource, self.client)
-    }
-    
     func post(with id: String, completion: @escaping (Post?, HttpError<String>?) -> Void) {
         var resource = Resource<Post, String>(path: Api.resource(Endpoints.posts, with: id))
         
@@ -51,23 +44,6 @@ class TestApi: Api {
             } else {
                 completion(nil, response.error)
             }
-        }
-    }
-    
-    @available(iOS 15.0, *)
-    @available(macOS 10.15.0, *)
-    @available(macOS 12.0, *)
-    func post(with id: String) async -> (Post?, HttpError<String>?) {
-        var resource = Resource<Post, String>(path: Api.resource(Endpoints.posts, with: id))
-        
-        resource.method = .get
-        
-        let response = await self.load(resource)
-        
-        if let post = response.value as? Post {
-            return (post, nil)
-        } else {
-            return (nil, response.error)
         }
     }
     
@@ -98,5 +74,4 @@ class TestApi: Api {
             }
         }
     }
-    
 }

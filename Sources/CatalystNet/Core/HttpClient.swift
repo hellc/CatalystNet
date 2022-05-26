@@ -29,78 +29,6 @@ open class HttpClient {
 
     public var commonParams: JSON = [:]
     
-    @available(iOS 15.0, *)
-    @available(macOS 10.15.0, *)
-    @available(macOS 12.0, *)
-    open func load<A, E>(resource: Resource<A, E>) async -> Result<Any, E> {
-        #if !os(watchOS)
-        if !Reachability.isConnectedToNetwork() {
-            return .failure(.noInternetConnection)
-        }
-        #endif
-
-        var newResouce = resource
-
-        newResouce.params += self.commonParams
-
-        var request = URLRequest(baseUrl: baseUrl, resource: newResouce)
-        
-        request.timeoutInterval = 15.0
-        
-        if resource.download {
-            do {
-                let (localURL, response) = try await URLSession.shared.download(for: request)
-                
-                guard let response = response as? HTTPURLResponse else {
-                    return .failure(.other("HTTPURLResponse is missed"))
-                }
-                
-                let statusCode = response.statusCode
-                
-                if (200 ..< 300) ~= statusCode {
-                    return Result(value: localURL, or: .other("No file"))
-                } else if statusCode == 401 {
-                    return .failure(.unauthorized)
-                } else if statusCode == 403 {
-                    return .failure(.forbidden)
-                } else {
-                    return .failure(.other("Unknown"))
-                }
-            } catch {
-                return Result(value: nil, or: .unsupportedResource)
-            }
-        }
-        
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let response = response as? HTTPURLResponse else {
-                return .failure(.other("HTTPURLResponse is missed"))
-            }
-            
-            let statusCode = response.statusCode
-            let output = String(data: data, encoding: .utf8) ?? ""
-            
-            if (200 ..< 300) ~= statusCode {
-                if let value = resource.parse(data) {
-                    return Result(value: value, or: .other(output))
-                } else {
-                    return Result(value: output, or: .unsupportedResource)
-                }
-            } else if statusCode == 401 {
-                return .failure(.unauthorized)
-            } else if statusCode == 403 {
-                return .failure(.forbidden)
-            } else if let error = resource.parseError(data) {
-                return .failure(.custom(error))
-            } else {
-                return .failure(.other(output))
-            }
-        } catch {
-            return .failure(.other("try await"))
-        }
-    }
-    
     // swiftlint:disable function_body_length
     open func load<A, E>(
         resource: Resource<A, E>,
@@ -218,5 +146,79 @@ open class HttpClient {
         task.resume()
 
         return task
+    }
+}
+
+@available(iOS 15.0, *)
+@available(macOS 10.15.0, *)
+@available(macOS 12.0, *)
+extension HttpClient {
+    open func load<A, E>(resource: Resource<A, E>) async -> Result<Any, E> {
+        #if !os(watchOS)
+        if !Reachability.isConnectedToNetwork() {
+            return .failure(.noInternetConnection)
+        }
+        #endif
+
+        var newResouce = resource
+
+        newResouce.params += self.commonParams
+
+        var request = URLRequest(baseUrl: baseUrl, resource: newResouce)
+        
+        request.timeoutInterval = 15.0
+        
+        if resource.download {
+            do {
+                let (localURL, response) = try await URLSession.shared.download(for: request)
+                
+                guard let response = response as? HTTPURLResponse else {
+                    return .failure(.other("HTTPURLResponse is missed"))
+                }
+                
+                let statusCode = response.statusCode
+                
+                if (200 ..< 300) ~= statusCode {
+                    return Result(value: localURL, or: .other("No file"))
+                } else if statusCode == 401 {
+                    return .failure(.unauthorized)
+                } else if statusCode == 403 {
+                    return .failure(.forbidden)
+                } else {
+                    return .failure(.other("Unknown"))
+                }
+            } catch {
+                return Result(value: nil, or: .unsupportedResource)
+            }
+        }
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let response = response as? HTTPURLResponse else {
+                return .failure(.other("HTTPURLResponse is missed"))
+            }
+            
+            let statusCode = response.statusCode
+            let output = String(data: data, encoding: .utf8) ?? ""
+            
+            if (200 ..< 300) ~= statusCode {
+                if let value = resource.parse(data) {
+                    return Result(value: value, or: .other(output))
+                } else {
+                    return Result(value: output, or: .unsupportedResource)
+                }
+            } else if statusCode == 401 {
+                return .failure(.unauthorized)
+            } else if statusCode == 403 {
+                return .failure(.forbidden)
+            } else if let error = resource.parseError(data) {
+                return .failure(.custom(error))
+            } else {
+                return .failure(.other(output))
+            }
+        } catch {
+            return .failure(.other("try await"))
+        }
     }
 }

@@ -24,14 +24,6 @@ open class Api {
         self.tasks.removeAll()
     }
     
-    @available(iOS 15.0, *)
-    @available(macOS 10.15.0, *)
-    @available(macOS 12.0, *)
-    open func load<T, E>(_ resource: Resource<T, E>,
-                              _ client: HttpClient) async -> Result<Any, E> {
-        return await client.load(resource: resource)
-    }
-    
     open func load<T, E>(_ resource: Resource<T, E>,
                         _ client: HttpClient,
                         multitasking: Bool = false,
@@ -72,3 +64,12 @@ open class Api {
     }
 }
 
+@available(iOS 15.0, *)
+@available(macOS 10.15.0, *)
+@available(macOS 12.0, *)
+extension Api {
+    open func load<T, E>(_ resource: Resource<T, E>,
+                              _ client: HttpClient) async -> Result<Any, E> {
+        return await client.load(resource: resource)
+    }
+}
