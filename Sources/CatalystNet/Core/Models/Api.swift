@@ -64,9 +64,8 @@ open class Api {
     }
 }
 
-@available(iOS 15.0, *)
+@available(iOS 13.0.0, *)
 @available(macOS 10.15.0, *)
-@available(macOS 12.0, *)
 extension Api {
     open func load<T, E>(_ resource: Resource<T, E>,
                               _ client: HttpClient) async -> Result<Any, E> {

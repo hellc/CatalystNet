@@ -18,8 +18,8 @@ class TestApi: Api {
             return "/albums/\(albumId)/photos"
         }
         
-        static func photo(albumId: Int, photoId: Int) -> String {
-            return "/albums/\(albumId)/photos/\(photoId)"
+        static func photo(photoId: Int) -> String {
+            return "/photos/\(photoId)"
         }
     }
     
@@ -61,8 +61,8 @@ class TestApi: Api {
         }
     }
     
-    func photo(albumId: Int, photoId: Int, completion: @escaping (Photo?, HttpError<String>?) -> Void) {
-        var resource = Resource<Photo, String>(path: Endpoints.photo(albumId: albumId, photoId: photoId))
+    func photo(photoId: Int, completion: @escaping (Photo?, HttpError<String>?) -> Void) {
+        var resource = Resource<Photo, String>(path: Endpoints.photo(photoId: photoId))
         
         resource.method = .get
         

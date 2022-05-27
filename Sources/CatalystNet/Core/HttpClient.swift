@@ -149,9 +149,8 @@ open class HttpClient {
     }
 }
 
-@available(iOS 15.0, *)
+@available(iOS 13.0.0, *)
 @available(macOS 10.15.0, *)
-@available(macOS 12.0, *)
 extension HttpClient {
     open func load<A, E>(resource: Resource<A, E>) async -> Result<Any, E> {
         #if !os(watchOS)
@@ -171,13 +170,13 @@ extension HttpClient {
         if resource.download {
             do {
                 let (localURL, response) = try await URLSession.shared.download(for: request)
-                
+
                 guard let response = response as? HTTPURLResponse else {
                     return .failure(.other("HTTPURLResponse is missed"))
                 }
-                
+
                 let statusCode = response.statusCode
-                
+
                 if (200 ..< 300) ~= statusCode {
                     return Result(value: localURL, or: .other("No file"))
                 } else if statusCode == 401 {
@@ -188,7 +187,7 @@ extension HttpClient {
                     return .failure(.other("Unknown"))
                 }
             } catch {
-                return Result(value: nil, or: .unsupportedResource)
+                return .failure(.other(error.localizedDescription))
             }
         }
         
@@ -218,7 +217,7 @@ extension HttpClient {
                 return .failure(.other(output))
             }
         } catch {
-            return .failure(.other("try await"))
+            return .failure(.other(error.localizedDescription))
         }
     }
 }
