@@ -40,5 +40,23 @@ final class TestApiAsyncTests: XCTestCase {
         XCTAssertEqual(photo?.albumId, 1)
         XCTAssertEqual(photo?.id, 42)
         XCTAssertNotNil(photo?.url)
+        
+        let photoUrl = photo?.url
+        XCTAssertNotNil(photoUrl)
+        
+        guard let urlString = photoUrl, let url = URL(string: urlString) else {
+            return
+        }
+        
+        do {
+            let (localUrl, _) = try await URLSession.shared.download(from: url)
+            let image = UIImage(data: try Data(contentsOf: localUrl))
+            
+            XCTAssertNotNil(image)
+            XCTAssertEqual(image?.size.height, 600)
+            XCTAssertEqual(image?.size.width, 600)
+        } catch {
+            print(error)
+        }
     }
 }
