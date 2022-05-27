@@ -50,11 +50,17 @@ final class TestApiAsyncTests: XCTestCase {
         
         do {
             let (localUrl, _) = try await URLSession.shared.download(from: url)
-            let image = UIImage(data: try Data(contentsOf: localUrl))
+            let imageDownloaded = UIImage(data: try Data(contentsOf: localUrl))
             
-            XCTAssertNotNil(image)
-            XCTAssertEqual(image?.size.height, 600)
-            XCTAssertEqual(image?.size.width, 600)
+            XCTAssertNotNil(imageDownloaded)
+            XCTAssertEqual(imageDownloaded?.size.height, 600)
+            XCTAssertEqual(imageDownloaded?.size.width, 600)
+            
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let imageFromData = UIImage(data: data)
+            XCTAssertNotNil(imageFromData)
+            XCTAssertEqual(imageFromData?.size.height, 600)
+            XCTAssertEqual(imageFromData?.size.width, 600)
         } catch {
             print(error)
         }
