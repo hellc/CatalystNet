@@ -16,7 +16,7 @@ Universal AppleOS Apps Networking kit
 [CocoaPods](https://cocoapods.org) is a dependency manager for Cocoa projects. For usage and installation instructions, visit their website. To integrate CatalystNet into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
 ```ruby
-pod 'CatalystNet', '~> 1.0.2'
+pod 'CatalystNet', '~> 1.1.0'
 ```
 
 ### Swift Package Manager
@@ -27,7 +27,7 @@ Once you have your Swift package set up, adding CatalystNet as a dependency is a
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/hellc/CatalystNet.git", .upToNextMajor(from: "1.0.2"))
+    .package(url: "https://github.com/hellc/CatalystNet.git", .upToNextMajor(from: "1.1.0"))
 ]
 ```
 
@@ -45,55 +45,93 @@ If you prefer not to use any of the aforementioned dependency managers, you can 
 import CatalystNet
 ```
 
-#### Define a requested resource:
+#### Defining model:
 
 ```swift
-struct Post: Decodable {
-    let id: UInt
-    let userId: UInt
+struct Photo: Decodable {
+    let albumId: Int
+    let id: Int
     let title: String?
-    let body: String?
+    let url: String?
+    let thumbnailUrl: String?
+}
+
+struct CustomError: Decodable {
+    let message: String?
+    let code: Int?
 }
 ```
 
-#### Define Api class base:
+#### Defining base Api class:
 
 ```swift
-class TestApi: Api {
+class ExampleApi: Api {
     private let client: HttpClient!
     
-    init(baseUrl: String) {
+    init(baseUrl: String = "https://jsonplaceholder.typicode.com") {
         self.client = HttpClient(baseUrl: baseUrl)
     }
     
     func load<T, E>(_ resource: Resource<T, E>,
                     multitasking: Bool = false,
-                    completion: @escaping (Result<Any, E>) -> Void) {
+                    completion: @escaping (Result<T, E>) -> Void) {
+        // Setup auth policy if needed
+        // Also you could extend "Resource" model with authentication method for simply calling "resource.authenticate()" when needed
         super.load(resource, self.client, multitasking: multitasking, completion: completion)
     }
 }
 ```
 
-#### Define Api class methods:
-
+##### Defining Asynchronous Functions (iOS >= 13.0.0)
 ```swift
-extension TestApi {
-    private struct Endpoints {
-        static let posts = "/posts"
+@available(iOS 13.0.0, *)
+@available(macOS 10.15.0, *)
+extension ExampleApi {
+    func load<T, E>(_ resource: Resource<T, E>) async throws -> T {
+        // Setup auth policy here if needed
+        return try await super.load(resource, self.client)
     }
-    
-    func post(with id: String, completion: @escaping (Post?, HttpError<String>?) -> Void) {
-        var resource = Resource<Post, String>(path: Api.resource(Endpoints.posts, with: id))
+}
+
+```
+
+#### Defining Api class methods:
+```swift
+class PhotosApi: ExampleApi {
+    private struct Endpoints {
+        static let photos: String = "/photos"
+    }
+
+    func photo(with id: Int, completion: @escaping (Photo?, CatalystError<CustomError>?) -> Void) {
+        var resource = Resource<Photo, CustomError>(path: Api.resource(Endpoints.photos, with: id))
         
         resource.method = .get
         
+        // resource.authenticate() // if needed
+        
         self.load(resource) { response in
-            if let post = response.value as? Post {
-                completion(post, nil)
-            } else if let error = response.error {
+            switch response {
+            case .success(let photo):
+                completion(photo, nil)
+            case .failure(let error):
                 completion(nil, error)
             }
         }
+    }
+}
+
+##### Defining Asynchronous Functions (iOS >= 13.0.0)
+@available(iOS 13.0.0, *)
+@available(macOS 10.15.0, *)
+extension PhotosApi {
+    func photo(with id: Int) async throws -> Photo {
+        var resource = Resource<Photo, CustomError>(path: Api.resource(Endpoints.photos, with: id))
+        
+        resource.method = .get
+        
+        // resource.authenticate() // if needed
+        
+        return try await self.load(resource)
     }
 }
 ```
@@ -101,17 +139,34 @@ extension TestApi {
 #### Try it:
 
 ```swift
-let testApi = TestApi(baseUrl: "https://jsonplaceholder.typicode.com")
-let id = "42"
+let photosApi = PhotosApi()
 
-self.testApi.post(with: id) { (post, error) in
-    if let post = post, error == nil {
-        print(post)
-    }
+let photoId: Int = 42
+self.photosApi.photo(with: photoId) { (photo, error) in
+    print(photo)
 }
 ```
+##### Try it asynchronously:
 
+```swift
+let photoId: Int = 42
+do {
+    let photo = try await self.photosApi.photo(with: photoId)
+    print(photo)
+} catch {
+    print(error)
+    // TODO: Proceed "error" object
+}
+```
 Output:
 ```
-Post(id: 42, userId: 5, title: "commodi ullam sint et excepturi error explicabo praesentium voluptas", body: "odio fugit voluptatum ducimus earum autem est incidunt voluptatem\nodit reiciendis aliquam sunt sequi nulla dolorem\nnon facere repellendus voluptates quia\nratione harum vitae ut")
+Photo(
+    albumId: 1,
+    id: 42,
+    title: Optional("voluptatibus a autem molestias voluptas architecto culpa"),
+    url: Optional("https://via.placeholder.com/600/ca50ac"),
+    thumbnailUrl: Optional("https://via.placeholder.com/150/ca50ac")
+)
 ```
+
+Please follow Tests/ExampleTests.swift file for more usage examples <3

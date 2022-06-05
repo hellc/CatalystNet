@@ -12,8 +12,8 @@ open class Api {
 
     public init() {}
     
-    public static func resource(_ resource: String, with id: String) -> String {
-        return String.init(format: "%@/%@", resource, id)
+    public static func resource(_ location: String, with id: CVarArg) -> String {
+        return "\(location)/\(id)"
     }
     
     public func killTasks() {
@@ -27,7 +27,7 @@ open class Api {
     open func load<T, E>(_ resource: Resource<T, E>,
                         _ client: HttpClient,
                         multitasking: Bool = false,
-                        completion: @escaping (Result<Any, E>) -> Void) {
+                        completion: @escaping (Result<T, E>) -> Void) {
         self.load(
             resource,
             client,
@@ -42,7 +42,7 @@ open class Api {
                         multitasking: Bool = false,
                         logging: Bool = false,
                         logsHandler: @escaping (_ input: RequestLog, _ output: ResponseLog?) -> Void = { _, _ in },
-                        completion: @escaping (Result<Any, E>) -> Void) {
+                        completion: @escaping (Result<T, E>) -> Void) {
         DispatchQueue.main.async {
             let taskId = resource.path.absolutePath + resource.params.hash()
 
@@ -67,8 +67,7 @@ open class Api {
 @available(iOS 13.0.0, *)
 @available(macOS 10.15.0, *)
 extension Api {
-    open func load<T, E>(_ resource: Resource<T, E>,
-                              _ client: HttpClient) async -> Result<Any, E> {
-        return await client.load(resource: resource)
+    open func load<T, E>(_ resource: Resource<T, E>, _ client: HttpClient) async throws -> T {
+        return try await client.load(resource: resource)
     }
 }

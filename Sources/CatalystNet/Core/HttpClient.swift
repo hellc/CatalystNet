@@ -30,9 +30,9 @@ open class HttpClient {
     public var commonParams: JSON = [:]
     
     // swiftlint:disable function_body_length
-    open func load<A, E>(
-        resource: Resource<A, E>,
-        completion: @escaping (Result<Any, E>) -> Void,
+    open func load<T, E>(
+        resource: Resource<T, E>,
+        completion: @escaping (Result<T, E>) -> Void,
         logging: Bool = false,
         logsHandler: @escaping (_ input: RequestLog, _ output: ResponseLog?) -> Void = { _, _ in }
     ) -> URLSessionTask? {
@@ -77,12 +77,10 @@ open class HttpClient {
                 let statusCode = response.statusCode
                 
                 if (200 ..< 300) ~= statusCode {
-                    if let localURL = localURL {
-                        completion(
-                            Result(value: localURL, or: .other("No file"))
-                        )
+                    if let localURL = localURL as? T {
+                        completion(.success(localURL))
                     } else {
-                        completion(Result(value: nil, or: .unsupportedResource))
+                        completion(.failure(.unsupportedResource))
                     }
                 } else if statusCode == 401 {
                     completion(.failure(.unauthorized))
@@ -128,9 +126,9 @@ open class HttpClient {
             
             if (200 ..< 300) ~= statusCode {
                 if let value = data.flatMap(resource.parse) {
-                    completion(Result(value: value, or: .other(output)))
+                    completion(.success(value))
                 } else {
-                    completion(Result(value: output, or: .unsupportedResource))
+                    completion(.failure(.unsupportedResource))
                 }
             } else if statusCode == 401 {
                 completion(.failure(.unauthorized))
@@ -152,10 +150,10 @@ open class HttpClient {
 @available(iOS 13.0.0, *)
 @available(macOS 10.15.0, *)
 extension HttpClient {
-    open func load<A, E>(resource: Resource<A, E>) async -> Result<Any, E> {
+    open func load<T, E>(resource: Resource<T, E>) async throws -> T {
         #if !os(watchOS)
         if !Reachability.isConnectedToNetwork() {
-            return .failure(.noInternetConnection)
+            throw CatalystError<E>.noInternetConnection
         }
         #endif
 
@@ -172,22 +170,23 @@ extension HttpClient {
                 let (localURL, response) = try await URLSession.shared.download(for: request)
 
                 guard let response = response as? HTTPURLResponse else {
-                    return .failure(.other("HTTPURLResponse is missed"))
+                    throw CatalystError<E>.other("HTTPURLResponse is missed")
                 }
-
+                
                 let statusCode = response.statusCode
-
-                if (200 ..< 300) ~= statusCode {
-                    return Result(value: localURL, or: .other("No file"))
-                } else if statusCode == 401 {
-                    return .failure(.unauthorized)
-                } else if statusCode == 403 {
-                    return .failure(.forbidden)
-                } else {
-                    return .failure(.other("Unknown"))
+                guard let localURL = localURL as? T, (200 ..< 300) ~= statusCode else {
+                    if statusCode == 401 {
+                        throw CatalystError<E>.unauthorized
+                    } else if statusCode == 403 {
+                        throw CatalystError<E>.forbidden
+                    } else {
+                        throw CatalystError<E>.other("File download error")
+                    }
                 }
+                
+                return localURL
             } catch {
-                return .failure(.other(error.localizedDescription))
+                throw CatalystError<E>.other(error.localizedDescription)
             }
         }
         
@@ -195,29 +194,32 @@ extension HttpClient {
             let (data, response) = try await URLSession.shared.data(for: request)
             
             guard let response = response as? HTTPURLResponse else {
-                return .failure(.other("HTTPURLResponse is missed"))
+                throw CatalystError<E>.other("HTTPURLResponse is missed")
             }
             
             let statusCode = response.statusCode
             let output = String(data: data, encoding: .utf8) ?? ""
             
+            
+
+            
             if (200 ..< 300) ~= statusCode {
-                if let value = resource.parse(data) {
-                    return Result(value: value, or: .other(output))
-                } else {
-                    return Result(value: output, or: .unsupportedResource)
+                guard let value = resource.parse(data) else {
+                    throw CatalystError<E>.unsupportedResource
                 }
+                
+                return value
             } else if statusCode == 401 {
-                return .failure(.unauthorized)
+                throw CatalystError<E>.unauthorized
             } else if statusCode == 403 {
-                return .failure(.forbidden)
+                throw CatalystError<E>.forbidden
             } else if let error = resource.parseError(data) {
-                return .failure(.custom(error))
+                throw CatalystError<E>.custom(error)
             } else {
-                return .failure(.other(output))
+                throw CatalystError<E>.other(output)
             }
         } catch {
-            return .failure(.other(error.localizedDescription))
+            throw CatalystError<E>.other(error.localizedDescription)
         }
     }
 }

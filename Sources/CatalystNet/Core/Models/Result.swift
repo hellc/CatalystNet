@@ -9,11 +9,11 @@ import Foundation
 
 public enum Result<A, E> {
     case success(A)
-    case failure(HttpError<E>)
+    case failure(CatalystError<E>)
 }
 
 extension Result {
-    public init(value: A?, or error: HttpError<E>) {
+    public init(value: A?, or error: CatalystError<E>) {
         guard let value = value else {
             self = .failure(error)
             return
@@ -27,7 +27,7 @@ extension Result {
         return value
     }
 
-    public var error: HttpError<E>? {
+    public var error: CatalystError<E>? {
         guard case let .failure(error) = self else { return nil }
         return error
     }
