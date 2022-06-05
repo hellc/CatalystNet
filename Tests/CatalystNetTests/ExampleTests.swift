@@ -72,7 +72,7 @@ final class ExampleTests: XCTestCase {
 @available(iOS 13.0.0, *)
 @available(macOS 10.15.0, *)
 extension ExampleTests {
-    func testPost() async {
+    func testPostAsync() async {
         let id = 42
         do {
             let post = try await self.postApi.post(with: id)
@@ -83,7 +83,7 @@ extension ExampleTests {
         }
     }
     
-    func testPhotos() async {
+    func testPhotosAsync() async {
         let albumId = 1
         
         do {
@@ -95,7 +95,7 @@ extension ExampleTests {
         }
     }
     
-    func testPhoto() async {
+    func testPhotoAsync() async {
         let photoId = 42
         
         do {
@@ -111,7 +111,9 @@ extension ExampleTests {
             guard let urlString = photoUrl, let url = URL(string: urlString) else {
                 return
             }
+            XCTAssertNotNil(urlString)
             
+            #if os(iOS)
             do {
                 let (localUrl, _) = try await URLSession.shared.download(from: url)
                 let imageDownloaded = UIImage(data: try Data(contentsOf: localUrl))
@@ -129,6 +131,7 @@ extension ExampleTests {
                 print(error)
                 XCTAssertNotNil(error)
             }
+            #endif
         } catch {
             XCTAssertNotNil(error)
         }
